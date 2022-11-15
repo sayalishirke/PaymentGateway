@@ -3,7 +3,7 @@ from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie,csrf_exempt
 from authorizenet import apicontractsv1
 from authorizenet.apicontrollers import createTransactionController
-import requests
+# import requests
 
 merchant_loginID=settings.MERCHANT['API_ID']
 merchant_transaction_key=settings.MERCHANT['TRANSACTION_KEY']
@@ -11,7 +11,7 @@ merchant_transaction_key=settings.MERCHANT['TRANSACTION_KEY']
 """
 Charge a credit card
 """
-def charge_credit_card(amount,card_number,card_cvv,card_name,card_expiry):
+def charge_credit_card(amount,card_number,card_cvc,card_name,card_expiry):
     """
     Charge a credit card
     """
@@ -25,9 +25,9 @@ def charge_credit_card(amount,card_number,card_cvv,card_name,card_expiry):
 
     # Create the payment data for a credit card
     creditCard = apicontractsv1.creditCardType()
-    creditCard.cardNumber = "5424000000000015"
-    creditCard.expirationDate = "2025-12"
-    creditCard.cardCode = "999"
+    creditCard.cardNumber ='4263982640269299'
+    creditCard.expirationDate = '2023-02'
+    creditCard.cardCode = '837'
 
     # Add the payment data to a paymentType object
     payment = apicontractsv1.paymentType()
@@ -99,17 +99,13 @@ def charge_credit_card(amount,card_number,card_cvv,card_name,card_expiry):
     createtransactionrequest.refId = "MerchantID-0001"
     createtransactionrequest.transactionRequest = transactionrequest
 
-    print(createtransactionrequest.__dict__)
     # Create the controller
     createtransactioncontroller = createTransactionController(
         createtransactionrequest)
     # https://apitest.authorize.net/xml/v1/request.api
-    createtransactioncontroller.setenvironment(userenvironment='Sandbox')
-    # createtransactioncontroller.endpoint('https://apitest.authorize.net/xml/v1/request.api')
+    createtransactioncontroller.setenvironment('https://api.authorize.net/xml/v1/request.api')
     createtransactioncontroller.execute()
-    # createtransactioncontroller.buildrequest('https://apitest.authorize.net/xml/v1/request.api')
     response = createtransactioncontroller.getresponse()
-
     if response is not None:
         # Check to see if the API request was successfully received and acted upon
         if response.messages.resultCode == "Ok":
@@ -153,116 +149,14 @@ def charge_credit_card(amount,card_number,card_cvv,card_name,card_expiry):
     return response
 
 
-# if (os.path.basename(__file__) == os.path.basename(sys.argv[0])):
-#     charge_credit_card("12.23")
-
-
 @csrf_exempt
 def create_api_call(request):
     if request.method=='POST':
         card_number=request.POST.get('number')
         card_name=request.POST.get('name')
-        card_cvv=request.POST.get('cvc')
+        card_cvc=request.POST.get('cvc')
         card_expiration=request.POST.get('expiry')
-        response=charge_credit_card("78.90",card_number,card_cvv,card_name,card_expiration)
-        # createTransactionRequest = {
-        #     "merchantAuthentication": {
-        #         "name": "6SQ5cGg6wGY",
-        #         "transactionKey": "8m4cKsCAEe8556Tc"
-        #     },
-        #     "refId": "123456",
-        #     "transactionRequest": {
-        #         "transactionType": "authCaptureTransaction",
-        #         "amount": "5",
-        #         "payment": {
-        #             "creditCard": {
-        #                 "cardNumber": "5424000000000015",
-        #                 "expirationDate": "2025-12",
-        #                 "cardCode": "999"
-        #             }
-        #         },
-        #         "lineItems": {
-        #             "lineItem": {
-        #                 "itemId": "1",
-        #                 "name": "vase",
-        #                 "description": "Cannes logo",
-        #                 "quantity": "18",
-        #                 "unitPrice": "45.00"
-        #             }
-        #         },
-        #         "tax": {
-        #             "amount": "4.26",
-        #             "name": "level2 tax name",
-        #             "description": "level2 tax"
-        #         },
-        #         "duty": {
-        #             "amount": "8.55",
-        #             "name": "duty name",
-        #             "description": "duty description"
-        #         },
-        #         "shipping": {
-        #             "amount": "4.26",
-        #             "name": "level2 tax name",
-        #             "description": "level2 tax"
-        #         },
-        #         "poNumber": "456654",
-        #         "customer": {
-        #             "id": "99999456654"
-        #         },
-        #         "billTo": {
-        #             "firstName": "Ellen",
-        #             "lastName": "Johnson",
-        #             "company": "Souveniropolis",
-        #             "address": "14 Main Street",
-        #             "city": "Pecan Springs",
-        #             "state": "TX",
-        #             "zip": "44628",
-        #             "country": "US"
-        #         },
-        #         "shipTo": {
-        #             "firstName": "China",
-        #             "lastName": "Bayles",
-        #             "company": "Thyme for Tea",
-        #             "address": "12 Main Street",
-        #             "city": "Pecan Springs",
-        #             "state": "TX",
-        #             "zip": "44628",
-        #             "country": "US"
-        #         },
-        #         "customerIP": "192.168.1.1",
-        #         "transactionSettings": {
-        #             "setting": {
-        #                 "settingName": "testRequest",
-        #                 "settingValue": "false"
-        #             }
-        #         },
-        #         "userFields": {
-        #             "userField": [
-        #                 {
-        #                     "name": "MerchantDefinedFieldName1",
-        #                     "value": "MerchantDefinedFieldValue1"
-        #                 },
-        #                 {
-        #                     "name": "favorite_color",
-        #                     "value": "blue"
-        #                 }
-        #             ]
-        #         },
-        #         "processingOptions": {
-        #         "isSubsequentAuth": "true"
-        #         },
-        #         "subsequentAuthInformation": {
-        #         "originalNetworkTransId": "123456789NNNH",
-        #         "originalAuthAmount": "45.00",
-        #         "reason": "resubmission"         
-        #         },			
-        #         "authorizationIndicatorType": {
-        #         "authorizationIndicator": "final"
-        #     }
-        #     }
-        # }
-        # response=requests.get('https://api.authorize.net/xml/v1/request.api')
-        # print(response.content)
-        print(response.content)
+        response=charge_credit_card("78.90",card_number,card_cvc,card_name,card_expiration)
+        print(response)
         return render(request,'credit/thanking.html')
         
