@@ -130,5 +130,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MERCHANT={
     'API_ID':"6SQ5cGg6wGY",
-    'TRANSACTION_KEY':"8m4cKsCAEe8556Tc"
+    'TRANSACTION_KEY':"Not Received"
 }
