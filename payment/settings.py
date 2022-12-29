@@ -129,6 +129,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MERCHANT={
-    'API_ID':"6SQ5cGg6wGY",
-    'TRANSACTION_KEY':"Not Received"
+    'API_ID':"9fR2P8TzUL",
+    'TRANSACTION_KEY':"2a88gK2cCMBPj26b"
 }

@@ -8,6 +8,7 @@
             "name": "Python: Django",
             "type": "python",
             "request": "launch",
+            // "python": "c:/Users/sayali.shirke/.conda/envs/dpa/python.exe",
             "program": "${workspaceFolder}\\manage.py",
             "args": [
                 "runserver"

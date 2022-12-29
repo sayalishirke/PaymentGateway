@@ -1,19 +1,16 @@
 import React, { useState } from 'react'
 import Cards from 'react-credit-cards'
-import './App.css'
 import 'react-credit-cards/es/styles-compiled.css'
-import {API_URL} from './config/index';
-import CSRFToken from './csrftoken';
+import {API_URL} from '../config/index';
 
-function App () {
-  const [number, setNumber] = useState('')
-  const [name, setName] = useState('')
-  const [expiry, setExpiry] = useState('')
-  const [cvc, setCvc] = useState('')
-  const [focus, setFocus] = useState('')
-
-  return (
-    <div className='App'>
+function Credit(){
+    const [number, setNumber] = useState('')
+    const [name, setName] = useState('')
+    const [expiry, setExpiry] = useState('')
+    const [cvc, setCvc] = useState('')
+    const [focus, setFocus] = useState('')
+    return(
+<div className='App'>
       <Cards
         number={number}
         name={name}
@@ -25,7 +22,7 @@ function App () {
         action={`${API_URL}`}
         method='post'
       >
-        <CSRFToken/>
+        {/* <CSRFToken/> */}
         <input
           type='tel'
           name='number'
@@ -61,9 +58,9 @@ function App () {
         <button>
           submit
         </button>
+         
       </form>
-    </div>
-  )
+      </div>
+    )
 }
-
-export default App
+export default Credit

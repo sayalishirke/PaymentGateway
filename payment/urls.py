@@ -20,5 +20,6 @@ from credit import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',views.create_api_call,name="api")  
+    path('',views.create_api_call,name="api"),
+    path('sub/',views.create_new_subscription,name="subscription") 
 ]

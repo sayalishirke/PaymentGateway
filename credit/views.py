@@ -3,6 +3,14 @@ from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie,csrf_exempt
 from authorizenet import apicontractsv1
 from authorizenet.apicontrollers import createTransactionController
+import json
+import os, sys
+import imp
+
+from authorizenet import apicontractsv1
+from authorizenet.apicontrollers import *
+from decimal import *
+from datetime import *
 # import requests
 
 merchant_loginID=settings.MERCHANT['API_ID']
@@ -17,7 +25,7 @@ def charge_credit_card(amount,card_number,card_cvc,card_name,card_expiry):
     """
 
     # Create a merchantAuthenticationType object with authentication details
-    # retrieved from the constants file
+    # retrieved from the settings
     merchantAuth = apicontractsv1.merchantAuthenticationType()
     merchantAuth.name = merchant_loginID
     merchantAuth.transactionKey = merchant_transaction_key
@@ -25,9 +33,9 @@ def charge_credit_card(amount,card_number,card_cvc,card_name,card_expiry):
 
     # Create the payment data for a credit card
     creditCard = apicontractsv1.creditCardType()
-    creditCard.cardNumber = '5424000000000015'
-    creditCard.expirationDate = '2025-12'
-    creditCard.cardCode = '999'
+    creditCard.cardNumber = card_number
+    creditCard.expirationDate = card_expiry
+    creditCard.cardCode = card_cvc
 
     # Add the payment data to a paymentType object
     payment = apicontractsv1.paymentType()
@@ -102,10 +110,13 @@ def charge_credit_card(amount,card_number,card_cvc,card_name,card_expiry):
     # Create the controller
     createtransactioncontroller = createTransactionController(
         createtransactionrequest)
-    # https://apitest.authorize.net/xml/v1/request.api
-    createtransactioncontroller.setenvironment('https://api.authorize.net/xml/v1/request.api')
+
+    # https://apitest.authorize.net/xml/v1/request.api -> default testing endpoint
+    # createtransactioncontroller.setenvironment('https://api.authorize.net/xml/v1/request.api') -> production endpoint
     createtransactioncontroller.execute()
+    
     response = createtransactioncontroller.getresponse()
+    
     if response is not None:
         # Check to see if the API request was successfully received and acted upon
         if response.messages.resultCode == "Ok":
@@ -148,6 +159,71 @@ def charge_credit_card(amount,card_number,card_cvc,card_name,card_expiry):
 
     return response
 
+def create_subscription(amount,card_number,card_expiry,subscription_name,occurrence,interval):
+
+    # Setting the merchant details
+    merchantAuth = apicontractsv1.merchantAuthenticationType()
+    merchantAuth.name = merchant_loginID
+    merchantAuth.transactionKey = merchant_transaction_key
+
+    # Setting payment schedule
+    paymentschedule = apicontractsv1.paymentScheduleType()
+    paymentschedule.interval = apicontractsv1.paymentScheduleTypeInterval() #apicontractsv1.CTD_ANON() #modified by krgupta
+    paymentschedule.interval.length = interval
+    paymentschedule.interval.unit = apicontractsv1.ARBSubscriptionUnitEnum.days
+    paymentschedule.startDate = datetime(2022, 12, 20)
+    paymentschedule.totalOccurrences = occurrence   #To create an ongoing subscription without an end date, set totalOccurrences to "9999".
+    paymentschedule.trialOccurrences = 0
+
+    # Giving the credit card info
+    creditcard = apicontractsv1.creditCardType()
+    creditcard.cardNumber = card_number
+    creditcard.expirationDate = card_expiry
+
+    payment = apicontractsv1.paymentType()
+    payment.creditCard = creditcard
+
+    # Setting billing information
+    billto = apicontractsv1.nameAndAddressType()
+    billto.firstName = "John"
+    billto.lastName = "Smith"
+
+    # Setting subscription details
+    subscription = apicontractsv1.ARBSubscriptionType()
+    subscription.name = subscription_name
+    subscription.paymentSchedule = paymentschedule
+    subscription.amount = amount
+    subscription.trialAmount = Decimal('0.00')
+    subscription.billTo = billto
+    subscription.payment = payment
+
+    # Creating the request
+    request = apicontractsv1.ARBCreateSubscriptionRequest()
+    request.merchantAuthentication = merchantAuth
+    request.subscription = subscription
+
+    # Creating and executing the controller
+    controller = ARBCreateSubscriptionController(request)
+    controller.execute()
+
+    # Getting the response
+    response = controller.getresponse()
+
+    if (response.messages.resultCode=="Ok"):
+        print ("SUCCESS:")
+        print ("Message Code : %s" % response.messages.message[0]['code'].text)
+        print ("Message text : %s" % str(response.messages.message[0]['text'].text))
+        print ("Subscription ID : %s" % response.subscriptionId)
+    else:
+        print ("ERROR:")
+        print ("Message Code : %s" % response.messages.message[0]['code'].text)
+        print ("Message text : %s" % response.messages.message[0]['text'].text)
+
+    return response
+
+
+
+
 
 @csrf_exempt
 def create_api_call(request):
@@ -159,4 +235,18 @@ def create_api_call(request):
         response=charge_credit_card("9.90",card_number,card_cvc,card_name,card_expiration)
         print(response)
         return render(request,'credit/thanking.html')
-        
+
+@csrf_exempt       
+def create_new_subscription(request):
+    if request.method=='POST':
+        card_number=request.POST.get('number')
+        card_name=request.POST.get('name')
+        card_cvc=request.POST.get('cvc')
+        interval=request.POST.get('interval')
+        occurrence=request.POST.get('occurrence')
+        subscription_name=request.POST.get('subscription_name')
+        card_expiry=request.POST.get('expiry')
+        amount=request.POST.get('amount')
+        response=create_subscription(amount,card_number,card_expiry,subscription_name,occurrence,interval)
+        print(response)
+        return render(request,'credit/thanking.html')
